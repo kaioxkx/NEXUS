@@ -69,6 +69,99 @@ Tabs.Inf:AddParagraph({
     Title = "EXECUTOR:",
     Content = executor
 })
+-- SERVIÇOS
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+-- VALORES PADRÃO
+local SpeedValue = 16
+local JumpValue = 50
+local GravityValue = workspace.Gravity
+
+-- TEXTOS (MOSTRAM OS VALORES)
+local SpeedText = Tabs.Main:AddParagraph({
+    Title = "VELOCIDADE:",
+    Content = tostring(SpeedValue)
+})
+
+local JumpText = Tabs.Main:AddParagraph({
+    Title = "PULO:",
+    Content = tostring(JumpValue)
+})
+
+local GravityText = Tabs.Main:AddParagraph({
+    Title = "GRAVIDADE:",
+    Content = tostring(GravityValue)
+})
+
+-- INPUT VELOCIDADE
+Tabs.Main:AddInput("SpeedInput", {
+    Title = "Velocidade",
+    Default = tostring(SpeedValue),
+    Placeholder = "Ex: 16",
+    Numeric = true,
+    Finished = false,
+    Callback = function(Value)
+        if tonumber(Value) then
+            SpeedValue = tonumber(Value)
+            SpeedText:Set({
+                Title = "VELOCIDADE:",
+                Content = tostring(SpeedValue)
+            })
+        end
+    end
+})
+
+-- INPUT PULO
+Tabs.Main:AddInput("JumpInput", {
+    Title = "Pulo",
+    Default = tostring(JumpValue),
+    Placeholder = "Ex: 50",
+    Numeric = true,
+    Finished = false,
+    Callback = function(Value)
+        if tonumber(Value) then
+            JumpValue = tonumber(Value)
+            JumpText:Set({
+                Title = "PULO:",
+                Content = tostring(JumpValue)
+            })
+        end
+    end
+})
+
+-- INPUT GRAVIDADE
+Tabs.Main:AddInput("GravityInput", {
+    Title = "Gravidade",
+    Default = tostring(GravityValue),
+    Placeholder = "Ex: 196.2",
+    Numeric = true,
+    Finished = false,
+    Callback = function(Value)
+        if tonumber(Value) then
+            GravityValue = tonumber(Value)
+            GravityText:Set({
+                Title = "GRAVIDADE:",
+                Content = tostring(GravityValue)
+            })
+        end
+    end
+})
+
+-- APLICA TUDO O TEMPO TODO
+RunService.Stepped:Connect(function()
+    local character = player.Character
+    if character then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = SpeedValue
+            humanoid.JumpPower = JumpValue
+        end
+    end
+    workspace.Gravity = GravityValue
+end)
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Tabs.Inf)
