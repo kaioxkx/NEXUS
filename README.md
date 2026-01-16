@@ -11,9 +11,9 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Inf = Window:AddTab({ Title = "INÍCIO", Icon = "rbxassetid://4034483357" }),
-    Main = Window:AddTab({ Title = "DIVERSÃO", Icon = "rbxassetid://183050029" }),
-	troll = Window:AddTab({ Title = "TROOL", Icon = "rbxassetid://5294554973" }),
+    Inf = Window:AddTab({ Title = "INÍCIO", Icon = "rbxassetid://98840793003231" }),
+    Main = Window:AddTab({ Title = "DIVERSÃO", Icon = "rbxassetid://130912825937739" }),
+	troll = Window:AddTab({ Title = "TROOL", Icon = "rbxassetid://126610247433890" }),
 	
 }
 
