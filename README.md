@@ -158,6 +158,99 @@ Tabs.Main:AddButton({
         })
     end
 })
+
+-- SERVIÇOS
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local ESPEnabled = false
+local ESPObjects = {}
+
+-- FUNÇÃO: CRIAR ESP
+local function createESP(player)
+    if player == LocalPlayer then return end
+    if not player.Character then return end
+    if ESPObjects[player] then return end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "MilenioX_ESP"
+    highlight.Adornee = player.Character
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.FillTransparency = 1
+    highlight.OutlineTransparency = 0
+
+    -- cor do time
+    local color = Color3.new(1,1,1)
+    if player.Team and player.Team.TeamColor then
+        color = player.Team.TeamColor.Color
+    end
+
+    highlight.OutlineColor = color
+    highlight.Parent = player.Character
+
+    ESPObjects[player] = highlight
+end
+
+-- FUNÇÃO: REMOVER ESP
+local function removeESP(player)
+    if ESPObjects[player] then
+        ESPObjects[player]:Destroy()
+        ESPObjects[player] = nil
+    end
+end
+
+-- ATUALIZA CONSTANTE
+RunService.Heartbeat:Connect(function()
+    if not ESPEnabled then return end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if player.Character then
+                if not ESPObjects[player] then
+                    createESP(player)
+                else
+                    -- atualiza cor se trocar de time
+                    if player.Team and player.Team.TeamColor then
+                        ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- RESPAWN / TEAM CHANGE
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if ESPEnabled then
+            task.wait(0.5)
+            createESP(player)
+        end
+    end)
+end)
+
+-- BOTÃO ESP
+Tabs.Main:AddToggle("ESP_TOGGLE", {
+    Title = "ESP (Team Color)",
+    Default = false,
+    Callback = function(Value)
+        ESPEnabled = Value
+
+        if not ESPEnabled then
+            for player, _ in pairs(ESPObjects) do
+                removeESP(player)
+            end
+        end
+
+        Fluent:Notify({
+            Title = "MILENIO X",
+            Content = "ESP",
+            SubContent = ESPEnabled and "ESP ATIVADO" or "ESP DESATIVADO",
+            Duration = 4
+        })
+    end
+})
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Inf)
