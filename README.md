@@ -75,29 +75,13 @@ local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 
--- VALORES PADRÃO
+-- VALORES PADRÃO (CERTOS)
 local SpeedValue = 16
 local JumpValue = 50
-local GravityValue = workspace.Gravity
-
--- TEXTOS (MOSTRAM OS VALORES)
-local SpeedText = Tabs.Main:AddParagraph({
-    Title = "VELOCIDADE:",
-    Content = tostring(SpeedValue)
-})
-
-local JumpText = Tabs.Main:AddParagraph({
-    Title = "PULO:",
-    Content = tostring(JumpValue)
-})
-
-local GravityText = Tabs.Main:AddParagraph({
-    Title = "GRAVIDADE:",
-    Content = tostring(GravityValue)
-})
+local GravityValue = 196.2
 
 -- INPUT VELOCIDADE
-Tabs.Main:AddInput("SpeedInput", {
+local SpeedInput = Tabs.Main:AddInput("SpeedInput", {
     Title = "Velocidade",
     Default = tostring(SpeedValue),
     Placeholder = "Ex: 16",
@@ -106,16 +90,12 @@ Tabs.Main:AddInput("SpeedInput", {
     Callback = function(Value)
         if tonumber(Value) then
             SpeedValue = tonumber(Value)
-            SpeedText:Set({
-                Title = "VELOCIDADE:",
-                Content = tostring(SpeedValue)
-            })
         end
     end
 })
 
 -- INPUT PULO
-Tabs.Main:AddInput("JumpInput", {
+local JumpInput = Tabs.Main:AddInput("JumpInput", {
     Title = "Pulo",
     Default = tostring(JumpValue),
     Placeholder = "Ex: 50",
@@ -124,16 +104,12 @@ Tabs.Main:AddInput("JumpInput", {
     Callback = function(Value)
         if tonumber(Value) then
             JumpValue = tonumber(Value)
-            JumpText:Set({
-                Title = "PULO:",
-                Content = tostring(JumpValue)
-            })
         end
     end
 })
 
 -- INPUT GRAVIDADE
-Tabs.Main:AddInput("GravityInput", {
+local GravityInput = Tabs.Main:AddInput("GravityInput", {
     Title = "Gravidade",
     Default = tostring(GravityValue),
     Placeholder = "Ex: 196.2",
@@ -142,10 +118,6 @@ Tabs.Main:AddInput("GravityInput", {
     Callback = function(Value)
         if tonumber(Value) then
             GravityValue = tonumber(Value)
-            GravityText:Set({
-                Title = "GRAVIDADE:",
-                Content = tostring(GravityValue)
-            })
         end
     end
 })
@@ -160,11 +132,12 @@ RunService.Stepped:Connect(function()
             humanoid.JumpPower = JumpValue
         end
     end
+
     workspace.Gravity = GravityValue
 end)
 Options.MyToggle:SetValue(false)
 
-Window:SelectTab(Tabs.Inf)
+Window:SelectTab(Inf)
 
 
 spawn(monitorPlayerPosition)
