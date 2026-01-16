@@ -11,7 +11,7 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Inf = Window:AddTab({ Title = "COMEÇO", Icon = "rbxassetid://79247048304044" }),
+    Inf = Window:AddTab({ Title = "INÍCIO", Icon = "rbxassetid://79247048304044" }),
     Main = Window:AddTab({ Title = "DIVERSÃO", Icon = "rbxassetid://106204366458572" }),
 	troll = Window:AddTab({ Title = "TROOL", Icon = "rbxassetid://106204366458572" }),
 }
@@ -27,16 +27,25 @@ pcall(function()
     gameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
 end)
 
--- Executor (tipo de Roblox)
+-- Executor
 local executor = "Desconhecido"
 if identifyexecutor then
     executor = identifyexecutor()
 end
 
--- TÍTULO
-Tabs.Inf:AddParagraph({
-    Title = "BEM VINDO!",
-    Content = ""
+Tabs.Inf:AddButton({
+    Title = "DISCORD",
+    Description = "COPIAR LINK DO DISCORD",
+    Callback = function()
+        setclipboard("https://discord.gg/HwmQsvXyv6")
+
+        Fluent:Notify({
+            Title = "NEXUS",
+            Content = "DISCORD",
+            SubContent = "LINK DO DISCORD COPIADO✅",
+            Duration = 5
+        })
+    end
 })
 
 -- INFO DO JOGADOR
@@ -61,7 +70,7 @@ Tabs.Inf:AddParagraph({
 })
 Options.MyToggle:SetValue(false)
 
-Window:SelectTab(1)
+Window:SelectTab(Tabs.Inf)
 
 
 spawn(monitorPlayerPosition)
