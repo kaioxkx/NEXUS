@@ -11,9 +11,12 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Inf = Window:AddTab({ Title = "INÍCIO", Icon = "rbxassetid://79247048304044" }),
-    Main = Window:AddTab({ Title = "DIVERSÃO", Icon = "rbxassetid://106204366458572" }),
-	troll = Window:AddTab({ Title = "TROOL", Icon = "rbxassetid://106204366458572" }),
+    Inf = Window:AddTab({ Title = "INÍCIO", Icon = "rbxassetid://4034483357" }),
+    Main = Window:AddTab({ Title = "DIVERSÃO", Icon = "rbxassetid://183050029" }),
+	troll = Window:AddTab({ Title = "TROOL", Icon = "rbxassetid://5294554973" }),
+	
+-- COMEÇA NA TAB INF
+Window:SelectTab(Tabs.Inf)	
 }
 
 local Players = game:GetService("Players")
