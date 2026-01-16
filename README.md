@@ -15,8 +15,6 @@ local Tabs = {
     Main = Window:AddTab({ Title = "DIVERSÃO", Icon = "rbxassetid://183050029" }),
 	troll = Window:AddTab({ Title = "TROOL", Icon = "rbxassetid://5294554973" }),
 	
--- COMEÇA NA TAB INF
-Window:SelectTab(Tabs.Inf)	
 }
 
 local Players = game:GetService("Players")
