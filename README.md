@@ -134,7 +134,30 @@ RunService.Stepped:Connect(function()
     end
 
     workspace.Gravity = GravityValue
+	
 end)
+Tabs.Main:AddButton({
+    Title = "RESET STATUS",
+    Description = "Reseta velocidade, pulo e gravidade",
+    Callback = function()
+        -- valores padrão do Roblox
+        SpeedValue = 16
+        JumpValue = 50
+        GravityValue = 196.2
+
+        -- atualiza os inputs
+        SpeedInput:SetValue(tostring(SpeedValue))
+        JumpInput:SetValue(tostring(JumpValue))
+        GravityInput:SetValue(tostring(GravityValue))
+
+        Fluent:Notify({
+            Title = "MILENIO X",
+            Content = "RESET",
+            SubContent = "Velocidade, pulo e gravidade resetados",
+            Duration = 4
+        })
+    end
+})
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Inf)
