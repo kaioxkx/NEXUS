@@ -286,6 +286,12 @@ local function setupESP(player)
 
     highlight.Parent = player.Character
     ESPObjects[player] = highlight
+
+    -- Atualiza o ESP quando o personagem do jogador é adicionado
+    player.CharacterAdded:Connect(function(character)
+        task.wait(0.2) -- Aguarda um curto período para garantir que o personagem está completamente carregado
+        setupESP(player) -- Aplica o ESP ao novo personagem
+    end)
 end
 
 -- =====================================
@@ -316,42 +322,18 @@ local function removeAll()
     end
 end
 
--- =====================================
--- GARANTE ESP NO RESPAWN
--- =====================================
-local function onCharacter(player)
-    player.CharacterAdded:Connect(function(character)
-        task.wait(0.2) -- Aguarda um curto período para garantir que o personagem está completamente carregado
-        setupESP(player) -- Aplica o ESP ao novo personagem
-    end)
-
-    -- Aplicar ESP ao personagem atual se já estiver no jogo
-    if player.Character then
-        setupESP(player)
-    end
-end
-
--- conecta pra quem já está no jogo
-for _, p in ipairs(Players:GetPlayers()) do
-    onCharacter(p)
-end
-
--- conecta pra quem chegar
-Players.PlayerAdded:Connect(function(p)
-    onCharacter(p)
+-- Conectar cada jogador que entra no jogo
+Players.PlayerAdded:Connect(function(player)
+    setupESP(player)
 end)
 
 -- =====================================
--- LOOP PRA MANTER COR DO TIME
+-- LOOP PARA MANUTENÇÃO DO ESP
 -- =====================================
 RunService.Heartbeat:Connect(function()
     if ESPEnabled then
-        for p, _ in pairs(ESPObjects) do
-            if p.Team and p.Team.TeamColor then
-                ESPObjects[p].OutlineColor = p.Team.TeamColor.Color
-            else
-                ESPObjects[p].OutlineColor = Color3.new(1, 1, 1)
-            end
+        for _, player in ipairs(Players:GetPlayers()) do
+            setupESP(player) -- Aplica ou atualiza o ESP para cada jogador
         end
     end
 end)
@@ -366,12 +348,15 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
         ESPEnabled = Value
 
         if ESPEnabled then
-            applyAll()
+            applyAll() -- Aplica o ESP a todos os jogadores
         else
-            removeAll()
+            removeAll() -- Remove o ESP de todos os jogadores
         end
     end
 })
+
+-- Inicializa ESP para jogadores já conectados
+applyAll()
 
 Options.MyToggle:SetValue(false)
 
