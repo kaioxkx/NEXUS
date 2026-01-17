@@ -242,7 +242,7 @@ Tabs.Main:AddToggle("NOCLIP", {
 })
 
 -- =====================================
--- ESP
+-- ESP CLÁSSICO PREMIUM (AlwaysOnTop)
 -- =====================================
 
 -- SERVIÇOS
@@ -266,7 +266,7 @@ local function setupESP(player)
         if player.Team and player.Team.TeamColor then
             h.OutlineColor = player.Team.TeamColor.Color
         else
-            h.OutlineColor = Color3.new(1,1,1)
+            h.OutlineColor = Color3.new(1, 1, 1)
         end
         return
     end
@@ -281,7 +281,7 @@ local function setupESP(player)
     if player.Team and player.Team.TeamColor then
         highlight.OutlineColor = player.Team.TeamColor.Color
     else
-        highlight.OutlineColor = Color3.new(1,1,1)
+        highlight.OutlineColor = Color3.new(1, 1, 1)
     end
 
     highlight.Parent = player.Character
@@ -320,12 +320,24 @@ end
 -- GARANTE ESP NO RESPAWN
 -- =====================================
 local function onCharacter(player)
-    player.CharacterAdded:Connect(function()
-        task.wait(0.2)
-        if ESPEnabled then
-            setupESP(player)
+    player.CharacterAdded:Connect(function(character)
+        -- Espera a character ser totalmente carregado
+        local function waitForCharacter()
+            while not character:IsDescendantOf(workspace) do
+                task.wait()
+            end
+            task.wait(0.2) -- Espera um pouco para garantir que tudo esteja configurado
+            if ESPEnabled then
+                setupESP(player)
+            end
         end
+        waitForCharacter()  -- Chama a função para esperar pelo character
     end)
+
+    -- Aplicar ESP ao personagem atual se já estiver no jogo
+    if player.Character then
+        setupESP(player)
+    end
 end
 
 -- conecta pra quem já está no jogo
@@ -347,7 +359,7 @@ RunService.Heartbeat:Connect(function()
             if p.Team and p.Team.TeamColor then
                 ESPObjects[p].OutlineColor = p.Team.TeamColor.Color
             else
-                ESPObjects[p].OutlineColor = Color3.new(1,1,1)
+                ESPObjects[p].OutlineColor = Color3.new(1, 1, 1)
             end
         end
     end
@@ -357,7 +369,7 @@ end)
 -- BOTÃO ESP ON/OFF
 -- =====================================
 Tabs.Main:AddToggle("ESP_TOGGLE", {
-    Title = "ESP Clássico (Always On Top)",
+    Title = "ESP",
     Default = false,
     Callback = function(Value)
         ESPEnabled = Value
