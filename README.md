@@ -14,7 +14,7 @@ local Tabs = {
     Inf = Window:AddTab({ Title = "INÍCIO", Icon = "rbxassetid://98840793003231" }),
     Main = Window:AddTab({ Title = "DIVERSÃO", Icon = "rbxassetid://130912825937739" }),
 	troll = Window:AddTab({ Title = "TROOL", Icon = "rbxassetid://126610247433890" }),
-	tp = Window:AddTab({ Title = "ESPIONAGEM", Icon = "rbxassetid://126610247433890" }),
+	tp = Window:AddTab({ Title = "ESPIONAGEM", Icon = "rbxassetid://107501033979508" }),
 	
 }
 
@@ -494,7 +494,8 @@ end)
 
 
 local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
+
+local UsernameToSearch = ""
 
 -- TÍTULO
 Tabs.tp:AddParagraph({
@@ -502,8 +503,21 @@ Tabs.tp:AddParagraph({
     Content = "Consulta de contas do Roblox"
 })
 
--- função pra remover textos depois
-local function AutoDestroy(obj, time)
+-- INPUT
+Tabs.tp:AddInput("USER_INPUT", {
+    Title = "USUÁRIO:",
+    Default = "",
+    Placeholder = "Digite o nome do jogador",
+    Numeric = false,
+    Finished = false,
+
+    Callback = function(Value)
+        UsernameToSearch = Value
+    end
+})
+
+-- função para remover depois
+local function AutoRemove(obj, time)
     task.delay(time, function()
         if obj and obj.Destroy then
             obj:Destroy()
@@ -511,25 +525,18 @@ local function AutoDestroy(obj, time)
     end)
 end
 
--- INPUT USUÁRIO
-Tabs.tp:AddInput("USER_LOOKUP", {
-    Title = "USUÁRIO:",
-    Default = "",
-    Placeholder = "Digite o nome do usuário",
-    Numeric = false,
-    Finished = true,
+-- BOTÃO
+Tabs.tp:AddButton({
+    Title = "PUXAR INFORMAÇÕES ✅",
+    Callback = function()
 
-    Callback = function(username)
-        if username == "" then return end
+        if UsernameToSearch == "" then return end
 
         local userId
-
-        -- tentar pegar ID pelo nome
         local success = pcall(function()
-            userId = Players:GetUserIdFromNameAsync(username)
+            userId = Players:GetUserIdFromNameAsync(UsernameToSearch)
         end)
 
-        -- se não existir
         if not success or not userId then
             Fluent:Notify({
                 Title = "ERRO",
@@ -539,7 +546,6 @@ Tabs.tp:AddInput("USER_LOOKUP", {
             return
         end
 
-        -- puxar infos da conta
         local info
         pcall(function()
             info = Players:GetUserInfosByUserIdsAsync({userId})[1]
@@ -547,50 +553,41 @@ Tabs.tp:AddInput("USER_LOOKUP", {
 
         if not info then return end
 
-        -- status
-        local status = "Offline"
-        if info.IsOnline then
-            status = "Online"
-        end
+        local status = info.IsOnline and "Online" or "Offline"
+        local dataCriacao = os.date("%d/%m/%Y", info.Created.UnixTimestamp)
 
-        -- data da conta
-        local created = os.date("%d/%m/%Y", info.Created.UnixTimestamp)
-
-        -- textos
-        local t1 = Tabs.tp:AddParagraph({
+        local p1 = Tabs.tp:AddParagraph({
             Title = "USUÁRIO:",
             Content = info.Username
         })
 
-        local t2 = Tabs.tp:AddParagraph({
+        local p2 = Tabs.tp:AddParagraph({
             Title = "ID:",
             Content = tostring(userId)
         })
 
-        local t3 = Tabs.tp:AddParagraph({
+        local p3 = Tabs.tp:AddParagraph({
             Title = "DATA DE CONTA:",
-            Content = created
+            Content = dataCriacao
         })
 
-        local t4 = Tabs.tp:AddParagraph({
+        local p4 = Tabs.tp:AddParagraph({
             Title = "IDADE DA CONTA:",
             Content = tostring(info.AccountAge) .. " dias"
         })
 
-        local t5 = Tabs.tp:AddParagraph({
+        local p5 = Tabs.tp:AddParagraph({
             Title = "STATUS:",
             Content = status
         })
 
-        -- remover depois de 60 segundos
-        AutoDestroy(t1, 60)
-        AutoDestroy(t2, 60)
-        AutoDestroy(t3, 60)
-        AutoDestroy(t4, 60)
-        AutoDestroy(t5, 60)
+        AutoRemove(p1, 60)
+        AutoRemove(p2, 60)
+        AutoRemove(p3, 60)
+        AutoRemove(p4, 60)
+        AutoRemove(p5, 60)
     end
 })
-
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Inf)
