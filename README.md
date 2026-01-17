@@ -159,18 +159,37 @@ Tabs.Main:AddButton({
     end
 })
 
-local UIS = game:GetService("UserInputService")
+-- =====================================
+-- NEXUS - INFINITEJUMP & NOCLIP
+-- =====================================
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-
 local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+-- =====================================
+-- VARIÁVEIS
+-- =====================================
 local InfiniteJumpEnabled = false
-local NoClipEnabled = false
+local NoclipEnabled = false
 
 -- =====================================
 -- INFINITEJUMP
 -- =====================================
-Tabs.Main:AddToggle("INFINITEJUMP_TOGGLE", {
+UserInputService.JumpRequest:Connect(function()
+    if InfiniteJumpEnabled then
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Dead then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end
+end)
+
+Tabs.Main:AddToggle("INFINITEJUMP", {
     Title = "INFINITEJUMP",
     Default = false,
     Callback = function(Value)
@@ -178,52 +197,36 @@ Tabs.Main:AddToggle("INFINITEJUMP_TOGGLE", {
     end
 })
 
--- executa o InfiniteJump
-UIS.JumpRequest:Connect(function()
-    if InfiniteJumpEnabled then
-        local character = LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
-                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end
-    end
-end)
-
 -- =====================================
 -- NOCLIP
 -- =====================================
-Tabs.Main:AddToggle("NOCLIP_TOGGLE", {
+-- função para habilitar/desabilitar noclip
+local function toggleNoclip()
+    local character = LocalPlayer.Character
+    if not character then return end
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") and part.CanCollide ~= nil then
+            part.CanCollide = not NoclipEnabled
+        end
+    end
+end
+
+-- loop que aplica noclip o tempo todo quando ligado
+RunService.Stepped:Connect(function()
+    if NoclipEnabled then
+        toggleNoclip()
+    end
+end)
+
+Tabs.Main:AddToggle("NOCLIP", {
     Title = "NOCLIP",
     Default = false,
     Callback = function(Value)
-        NoClipEnabled = Value
+        NoclipEnabled = Value
+        -- aplica imediatamente ao ligar/desligar
+        toggleNoclip()
     end
 })
-
--- loop do noclip
-RunService.Stepped:Connect(function()
-    if NoClipEnabled then
-        local character = LocalPlayer.Character
-        if character then
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") and part.CanCollide then
-                    part.CanCollide = false
-                end
-            end
-        end
-    else
-        local character = LocalPlayer.Character
-        if character then
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
-            end
-        end
-    end
-end)
 -- =====================================
 -- esp
 -- =====================================
