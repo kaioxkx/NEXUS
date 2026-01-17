@@ -163,16 +163,17 @@ Tabs.Main:AddButton({
 -- NEXUS - INFINITEJUMP & NOCLIP
 -- =====================================
 
+-- SERVIÇOS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
--- =====================================
+local LocalPlayer = Players.LocalPlayer
+
 -- VARIÁVEIS
--- =====================================
 local InfiniteJumpEnabled = false
 local NoclipEnabled = false
+local NoclipParts = {}
 
 -- =====================================
 -- INFINITEJUMP
@@ -182,7 +183,7 @@ UserInputService.JumpRequest:Connect(function()
         local character = LocalPlayer.Character
         if character then
             local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Dead then
+            if humanoid and humanoid.Health > 0 then
                 humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
             end
         end
@@ -200,21 +201,34 @@ Tabs.Main:AddToggle("INFINITEJUMP", {
 -- =====================================
 -- NOCLIP
 -- =====================================
--- função para habilitar/desabilitar noclip
-local function toggleNoclip()
+local function setNoclip(enable)
     local character = LocalPlayer.Character
     if not character then return end
-    for _, part in ipairs(character:GetDescendants()) do
-        if part:IsA("BasePart") and part.CanCollide ~= nil then
-            part.CanCollide = not NoclipEnabled
+
+    if enable then
+        -- salva valores originais e desativa colisão
+        NoclipParts = {}
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                NoclipParts[part] = part.CanCollide
+                part.CanCollide = false
+            end
         end
+    else
+        -- restaura colisões
+        for part, original in pairs(NoclipParts) do
+            if part and part.Parent then
+                part.CanCollide = original
+            end
+        end
+        NoclipParts = {}
     end
 end
 
--- loop que aplica noclip o tempo todo quando ligado
+-- aplica noclip constantemente se ligado
 RunService.Stepped:Connect(function()
     if NoclipEnabled then
-        toggleNoclip()
+        setNoclip(true)
     end
 end)
 
@@ -223,8 +237,7 @@ Tabs.Main:AddToggle("NOCLIP", {
     Default = false,
     Callback = function(Value)
         NoclipEnabled = Value
-        -- aplica imediatamente ao ligar/desligar
-        toggleNoclip()
+        setNoclip(NoclipEnabled)
     end
 })
 -- =====================================
