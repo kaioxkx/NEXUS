@@ -151,15 +151,15 @@ Tabs.Main:AddButton({
         GravityInput:SetValue(tostring(GravityValue))
 
         Fluent:Notify({
-            Title = "MILENIO X",
+            Title = "NEXUS",
             Content = "RESET",
-            SubContent = "Velocidade, pulo e gravidade resetados",
-            Duration = 4
+            SubContent = "VELOCIDADE,PULO E GRAVIDADE FORAM RESETADOS!",
+            Duration = 3
         })
     end
 })
 
--- esp
+ESP 2026 KKKKKK
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -167,31 +167,31 @@ local LocalPlayer = Players.LocalPlayer
 local ESPEnabled = false
 local ESPObjects = {}
 
--- CRIAR ESP LEVE
+-- FUNÇÃO: CRIAR ESP
 local function createESP(player)
     if player == LocalPlayer then return end
     if not player.Character then return end
-    if ESPObjects[player] then return end
+    if ESPObjects[player] and ESPObjects[player].Parent then return end
 
     local highlight = Instance.new("Highlight")
     highlight.Name = "MilenioX_ESP"
     highlight.Adornee = player.Character
-    highlight.DepthMode = Enum.HighlightDepthMode.Occluded -- clássico
+    highlight.DepthMode = Enum.HighlightDepthMode.Occluded
     highlight.FillTransparency = 1
     highlight.OutlineTransparency = 0
 
-    -- cor do time
+    -- cor inicial
     if player.Team and player.Team.TeamColor then
         highlight.OutlineColor = player.Team.TeamColor.Color
     else
         highlight.OutlineColor = Color3.new(1,1,1)
     end
 
-    highlight.Parent = player.Character
+    highlight.Parent = workspace -- mantem no workspace pra não sumir
     ESPObjects[player] = highlight
 end
 
--- REMOVER ESP
+-- FUNÇÃO: REMOVER ESP
 local function removeESP(player)
     if ESPObjects[player] then
         ESPObjects[player]:Destroy()
@@ -199,35 +199,27 @@ local function removeESP(player)
     end
 end
 
--- ATUALIZA TODO MOMENTO
+-- ATUALIZAÇÃO CONSTANTE (COR DO TIME + CRIAR ESP)
 RunService.Heartbeat:Connect(function()
     if not ESPEnabled then return end
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            createESP(player) -- cria se não existir
-
-            -- atualiza cor do time
-            if player.Team and player.Team.TeamColor then
-                ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
-            else
-                ESPObjects[player].OutlineColor = Color3.new(1,1,1)
+        if player ~= LocalPlayer then
+            if player.Character then
+                createESP(player)
+                -- atualiza cor do time
+                if player.Team and player.Team.TeamColor then
+                    ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
+                else
+                    ESPObjects[player].OutlineColor = Color3.new(1,1,1)
+                end
             end
         end
     end
 end)
 
--- RESPAWN / ENTRADA DE JOGADOR
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        task.wait(0.3) -- espera o personagem carregar
-        if ESPEnabled then
-            createESP(player)
-        end
-    end)
-end)
-
-for _, player in ipairs(Players:GetPlayers()) do
+-- GARANTE ESP EM NOVOS JOGADORES / RESPAWN
+local function connectCharacter(player)
     player.CharacterAdded:Connect(function()
         task.wait(0.3)
         if ESPEnabled then
@@ -236,9 +228,17 @@ for _, player in ipairs(Players:GetPlayers()) do
     end)
 end
 
--- BOTÃO ESP CLÁSSICO
+for _, player in ipairs(Players:GetPlayers()) do
+    connectCharacter(player)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    connectCharacter(player)
+end)
+
+-- BOTÃO ESP
 Tabs.Main:AddToggle("ESP_TOGGLE", {
-    Title = "ESP (Team Color)",
+    Title = "ESP",
     Default = false,
     Callback = function(Value)
         ESPEnabled = Value
@@ -248,7 +248,7 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
                 removeESP(player)
             end
         else
-            -- ativa ESP em todos que já estão no jogo
+            -- aplica ESP em todos existentes
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer then
                     createESP(player)
