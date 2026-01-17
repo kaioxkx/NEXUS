@@ -253,17 +253,21 @@ local LocalPlayer = Players.LocalPlayer
 local ESPEnabled = false
 local ESPObjects = {}
 
--- cria o esp
+-- cria esp
 local function CreateESP(player)
     if player == LocalPlayer then return end
     if not player.Character then return end
-    if ESPObjects[player] then return end
+
+    if ESPObjects[player] then
+        ESPObjects[player]:Destroy()
+        ESPObjects[player] = nil
+    end
 
     local highlight = Instance.new("Highlight")
-    highlight.Name = "MILENIO_ESP"
+    highlight.Name = "NEXUS_ESP"
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.FillTransparency = 1 -- sem brilho
-    highlight.OutlineTransparency = 0.2
+    highlight.FillTransparency = 1
+    highlight.OutlineTransparency = 0.25
     highlight.Parent = player.Character
 
     ESPObjects[player] = highlight
@@ -278,39 +282,58 @@ local function RemoveESP(player)
 end
 
 -- atualiza cor do time
-local function UpdateESP(player)
-    if player == LocalPlayer then return end
-    if not player.Character then return end
-
-    local highlight = ESPObjects[player]
-    if not highlight then return end
+local function UpdateColor(player)
+    local esp = ESPObjects[player]
+    if not esp then return end
 
     if player.Team and player.Team.TeamColor then
-        highlight.OutlineColor = player.Team.TeamColor.Color
+        esp.OutlineColor = player.Team.TeamColor.Color
     else
-        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        esp.OutlineColor = Color3.fromRGB(255,255,255)
     end
 end
 
--- loop principal (aplica sempre)
+-- quando o personagem nascer
+local function OnCharacterAdded(player, character)
+    if ESPEnabled then
+        task.wait(0.3)
+        CreateESP(player)
+        UpdateColor(player)
+    end
+end
+
+-- quando player entrar
+local function OnPlayerAdded(player)
+    player.CharacterAdded:Connect(function(char)
+        OnCharacterAdded(player, char)
+    end)
+end
+
+-- conectar players atuais
+for _, plr in ipairs(Players:GetPlayers()) do
+    OnPlayerAdded(plr)
+end
+
+-- detectar novos players
+Players.PlayerAdded:Connect(OnPlayerAdded)
+
+-- loop de atualização (cor/time)
 RunService.Heartbeat:Connect(function()
     if not ESPEnabled then return end
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            if player.Character then
-                if not ESPObjects[player] then
-                    CreateESP(player)
-                end
-                UpdateESP(player)
+        if player ~= LocalPlayer and player.Character then
+            if not ESPObjects[player] then
+                CreateESP(player)
             end
+            UpdateColor(player)
         end
     end
 end)
 
--- limpa quando desliga
-local function ClearAllESP()
-    for player, esp in pairs(ESPObjects) do
+-- limpar tudo
+local function ClearESP()
+    for _, esp in pairs(ESPObjects) do
         if esp then
             esp:Destroy()
         end
@@ -326,7 +349,15 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
         ESPEnabled = Value
 
         if not Value then
-            ClearAllESP()
+            ClearESP()
+        else
+            -- aplica geral quando liga
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    CreateESP(player)
+                    UpdateColor(player)
+                end
+            end
         end
     end
 })
