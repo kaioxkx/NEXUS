@@ -241,7 +241,7 @@ Tabs.Main:AddToggle("NOCLIP", {
     end
 })
 -- =====================================
--- esp
+-- ESP
 -- =====================================
 
 -- SERVIÇOS
@@ -253,36 +253,35 @@ local ESPEnabled = false
 local ESPObjects = {}
 
 -- =====================================
--- FUNÇÃO: CRIAR ESP
+-- FUNÇÃO PRA CRIAR Highlight
 -- =====================================
-local function applyESP(player)
+local function createHighlight(player)
     if player == LocalPlayer then return end
+    if not player.Character then return end
     if ESPObjects[player] then return end
-
-    local character = player.Character
-    if not character then return end
 
     local highlight = Instance.new("Highlight")
     highlight.Name = "MilenioX_ESP"
-    highlight.Adornee = character
-    highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+    highlight.Adornee = player.Character
     highlight.FillTransparency = 1
     highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.Occluded
 
+    -- cor do time
     if player.Team and player.Team.TeamColor then
         highlight.OutlineColor = player.Team.TeamColor.Color
     else
-        highlight.OutlineColor = Color3.new(1,1,1)
+        highlight.OutlineColor = Color3.new(1, 1, 1)
     end
 
-    highlight.Parent = character
+    highlight.Parent = player.Character
     ESPObjects[player] = highlight
 end
 
 -- =====================================
--- FUNÇÃO: REMOVER ESP
+-- REMOVER Highlight
 -- =====================================
-local function removeESP(player)
+local function removeHighlight(player)
     if ESPObjects[player] then
         ESPObjects[player]:Destroy()
         ESPObjects[player] = nil
@@ -290,62 +289,59 @@ local function removeESP(player)
 end
 
 -- =====================================
--- FUNÇÃO: APLICAR ESP EM TODOS OS JOGADORES
+-- APLICAR ESP EM TODOS OS PLAYERS
 -- =====================================
 local function applyESPAll()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            applyESP(player)
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            createHighlight(plr)
         end
     end
 end
 
 -- =====================================
--- FUNÇÃO: REMOVER ESP DE TODOS
+-- REMOVER ESP DE TODOS
 -- =====================================
 local function removeESPAll()
-    for player, _ in pairs(ESPObjects) do
-        removeESP(player)
+    for plr, _ in pairs(ESPObjects) do
+        removeHighlight(plr)
     end
 end
 
 -- =====================================
--- RESPAWN: GARANTE ESP
+-- GARANTE ESP NO RESPAWN
 -- =====================================
-local function onCharacterAdded(player)
+local function setupPlayerESP(player)
     player.CharacterAdded:Connect(function()
-        task.wait(0.3) -- espera o character carregar
+        task.wait(0.3)
         if ESPEnabled then
-            applyESP(player)
+            createHighlight(player)
         end
     end)
 end
 
--- conecta para todos já no jogo
-for _, player in ipairs(Players:GetPlayers()) do
-    onCharacterAdded(player)
+-- conecta para quem já tá no jogo
+for _, plr in ipairs(Players:GetPlayers()) do
+    setupPlayerESP(plr)
 end
 
--- conecta jogadores que entrarem depois
-Players.PlayerAdded:Connect(function(player)
-    onCharacterAdded(player)
+-- conecta pra quem entrar depois
+Players.PlayerAdded:Connect(function(plr)
+    setupPlayerESP(plr)
 end)
 
 -- =====================================
--- LOOP PRINCIPAL: ATUALIZA ESP TODO MOMENTO
+-- LOOP DE ATUALIZAÇÃO (COR DO TIME)
 -- =====================================
 RunService.Heartbeat:Connect(function()
     if ESPEnabled then
-        for player, highlight in pairs(ESPObjects) do
-            if player.Team and player.Team.TeamColor then
-                highlight.OutlineColor = player.Team.TeamColor.Color
+        for plr, highlight in pairs(ESPObjects) do
+            if plr.Team and plr.Team.TeamColor then
+                highlight.OutlineColor = plr.Team.TeamColor.Color
             else
-                highlight.OutlineColor = Color3.new(1,1,1)
+                highlight.OutlineColor = Color3.new(1, 1, 1)
             end
         end
-
-        -- garante ESP em todo mundo
-        applyESPAll()
     end
 end)
 
@@ -358,10 +354,10 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
     Callback = function(Value)
         ESPEnabled = Value
 
-        if not ESPEnabled then
-            removeESPAll() -- remove tudo instantaneamente
+        if ESPEnabled then
+            applyESPAll()
         else
-            applyESPAll() -- aplica todos ao ligar
+            removeESPAll()
         end
     end
 })
