@@ -245,119 +245,91 @@ Tabs.Main:AddToggle("NOCLIP", {
 -- ESP
 -- =====================================
 
--- SERVIÇOS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
+
 local ESPEnabled = false
 local ESPObjects = {}
 
--- =====================================
--- CRIAR OU ATUALIZAR HIGHLIGHT
--- =====================================
-local function setupESP(player)
+-- cria o esp
+local function CreateESP(player)
     if player == LocalPlayer then return end
-    if not player.Character or not player.Character.Parent then return end
-
-    -- se já tem, só atualiza cor
-    if ESPObjects[player] then
-        local h = ESPObjects[player]
-        if player.Team and player.Team.TeamColor then
-            h.OutlineColor = player.Team.TeamColor.Color
-        else
-            h.OutlineColor = Color3.new(1, 1, 1)
-        end
-        return
-    end
+    if not player.Character then return end
+    if ESPObjects[player] then return end
 
     local highlight = Instance.new("Highlight")
-    highlight.Name = "MilenioX_ESP"
-    highlight.Adornee = player.Character
-    highlight.FillTransparency = 1
-    highlight.OutlineTransparency = 0
+    highlight.Name = "MILENIO_ESP"
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-
-    if player.Team and player.Team.TeamColor then
-        highlight.OutlineColor = player.Team.TeamColor.Color
-    else
-        highlight.OutlineColor = Color3.new(1, 1, 1)
-    end
-
+    highlight.FillTransparency = 1 -- sem brilho
+    highlight.OutlineTransparency = 0.2
     highlight.Parent = player.Character
-    ESPObjects[player] = highlight
 
-    -- Atualiza o ESP quando o personagem do jogador é adicionado
-    player.CharacterAdded:Connect(function(character)
-        task.wait(0.2) -- Aguarda um curto período para garantir que o personagem está completamente carregado
-        setupESP(player) -- Aplica o ESP ao novo personagem
-    end)
+    ESPObjects[player] = highlight
 end
 
--- =====================================
--- REMOVER ESP
--- =====================================
-local function removeESP(player)
+-- remove esp
+local function RemoveESP(player)
     if ESPObjects[player] then
         ESPObjects[player]:Destroy()
         ESPObjects[player] = nil
     end
 end
 
--- =====================================
--- APLICAR ESP EM TODOS
--- =====================================
-local function applyAll()
-    for _, p in ipairs(Players:GetPlayers()) do
-        setupESP(p)
+-- atualiza cor do time
+local function UpdateESP(player)
+    if player == LocalPlayer then return end
+    if not player.Character then return end
+
+    local highlight = ESPObjects[player]
+    if not highlight then return end
+
+    if player.Team and player.Team.TeamColor then
+        highlight.OutlineColor = player.Team.TeamColor.Color
+    else
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
     end
 end
 
--- =====================================
--- REMOVER TODOS
--- =====================================
-local function removeAll()
-    for p, _ in pairs(ESPObjects) do
-        removeESP(p)
-    end
-end
-
--- Conectar cada jogador que entra no jogo
-Players.PlayerAdded:Connect(function(player)
-    setupESP(player)
-end)
-
--- =====================================
--- LOOP PARA MANUTENÇÃO DO ESP
--- =====================================
+-- loop principal (aplica sempre)
 RunService.Heartbeat:Connect(function()
-    if ESPEnabled then
-        for _, player in ipairs(Players:GetPlayers()) do
-            setupESP(player) -- Aplica ou atualiza o ESP para cada jogador
+    if not ESPEnabled then return end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            if player.Character then
+                if not ESPObjects[player] then
+                    CreateESP(player)
+                end
+                UpdateESP(player)
+            end
         end
     end
 end)
 
--- =====================================
--- BOTÃO ESP ON/OFF
--- =====================================
+-- limpa quando desliga
+local function ClearAllESP()
+    for player, esp in pairs(ESPObjects) do
+        if esp then
+            esp:Destroy()
+        end
+    end
+    ESPObjects = {}
+end
+
+-- TOGGLE
 Tabs.Main:AddToggle("ESP_TOGGLE", {
     Title = "ESP",
     Default = false,
     Callback = function(Value)
         ESPEnabled = Value
 
-        if ESPEnabled then
-            applyAll() -- Aplica o ESP a todos os jogadores
-        else
-            removeAll() -- Remove o ESP de todos os jogadores
+        if not Value then
+            ClearAllESP()
         end
     end
 })
-
--- Inicializa ESP para jogadores já conectados
-applyAll()
-
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Inf)
