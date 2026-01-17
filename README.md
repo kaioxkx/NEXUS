@@ -14,6 +14,7 @@ local Tabs = {
     Inf = Window:AddTab({ Title = "INÍCIO", Icon = "rbxassetid://98840793003231" }),
     Main = Window:AddTab({ Title = "DIVERSÃO", Icon = "rbxassetid://130912825937739" }),
 	troll = Window:AddTab({ Title = "TROOL", Icon = "rbxassetid://126610247433890" }),
+	tp = Window:AddTab({ Title = "ESPIONAGEM", Icon = "rbxassetid://126610247433890" }),
 	
 }
 
@@ -361,6 +362,134 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
         end
     end
 })
+
+-- =====================================
+-- NOCLIP
+-- =====================================
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local SelectedPlayer = nil
+local SpectateEnabled = false
+
+local PlayerButtons = {}
+local SelectButton = nil
+
+-- reset câmera
+local function ResetCamera()
+    local char = LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            Camera.CameraSubject = hum
+        end
+    end
+end
+
+-- limpa botões
+local function ClearPlayerButtons()
+    for _, b in pairs(PlayerButtons) do
+        b:Destroy()
+    end
+    PlayerButtons = {}
+end
+
+-- cria lista jogadores
+local function RefreshPlayers()
+    ClearPlayerButtons()
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            local btn = Tabs.tp:AddButton({
+                Title = plr.DisplayName,
+                Description = "(@" .. plr.Name .. ")",
+                Callback = function()
+                    SelectedPlayer = plr
+
+                    -- muda nome do botão principal
+                    SelectButton:Set({
+                        Title = "JOGADOR: " .. plr.DisplayName,
+                        Description = "(@" .. plr.Name .. ")"
+                    })
+
+                    ClearPlayerButtons()
+                end
+            })
+
+            table.insert(PlayerButtons, btn)
+        end
+    end
+end
+
+-- BOTÃO SELECIONAR
+SelectButton = Tabs.tp:AddButton({
+    Title = "SELECIONAR JOGADOR",
+    Description = "Clique para escolher",
+    Callback = function()
+        RefreshPlayers()
+    end
+})
+
+-- BOTÃO TP
+Tabs.tp:AddButton({
+    Title = "TP",
+    Description = "Teleportar até o jogador",
+    Callback = function()
+        if SelectedPlayer
+        and SelectedPlayer.Character
+        and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+
+            LocalPlayer.Character:PivotTo(
+                SelectedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+            )
+        end
+    end
+})
+
+-- TOGGLE ESPECTAR
+Tabs.tp:AddToggle("SPECTATE", {
+    Title = "ESPECTAR",
+    Default = false,
+    Callback = function(Value)
+        SpectateEnabled = Value
+
+        if not Value then
+            ResetCamera()
+        end
+    end
+})
+
+-- mantém câmera sempre
+RunService.Heartbeat:Connect(function()
+    if SpectateEnabled and SelectedPlayer then
+        if SelectedPlayer.Character then
+            local hum = SelectedPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                Camera.CameraSubject = hum
+            end
+        end
+    end
+end)
+
+-- se jogador sair
+Players.PlayerRemoving:Connect(function(plr)
+    if plr == SelectedPlayer then
+        SelectedPlayer = nil
+        SpectateEnabled = false
+        ResetCamera()
+
+        SelectButton:Set({
+            Title = "SELECIONAR JOGADOR",
+            Description = "Clique para escolher"
+        })
+    end
+end)
+
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Inf)
