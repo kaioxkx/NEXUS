@@ -167,7 +167,7 @@ local LocalPlayer = Players.LocalPlayer
 local ESPEnabled = false
 local ESPObjects = {}
 
--- CRIAR ESP CLÁSSICO
+-- CRIAR ESP LEVE
 local function createESP(player)
     if player == LocalPlayer then return end
     if not player.Character then return end
@@ -179,9 +179,15 @@ local function createESP(player)
     highlight.DepthMode = Enum.HighlightDepthMode.Occluded -- clássico
     highlight.FillTransparency = 1
     highlight.OutlineTransparency = 0
-    highlight.OutlineColor = Color3.new(1,1,1) -- cor padrão, vai atualizar depois
-    highlight.Parent = player.Character
 
+    -- cor do time
+    if player.Team and player.Team.TeamColor then
+        highlight.OutlineColor = player.Team.TeamColor.Color
+    else
+        highlight.OutlineColor = Color3.new(1,1,1)
+    end
+
+    highlight.Parent = player.Character
     ESPObjects[player] = highlight
 end
 
@@ -198,32 +204,37 @@ RunService.Heartbeat:Connect(function()
     if not ESPEnabled then return end
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            if player.Character then
-                if not ESPObjects[player] then
-                    createESP(player)
-                else
-                    -- atualizar cor do time
-                    if player.Team and player.Team.TeamColor then
-                        ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
-                    else
-                        ESPObjects[player].OutlineColor = Color3.new(1,1,1)
-                    end
-                end
+        if player ~= LocalPlayer and player.Character then
+            createESP(player) -- cria se não existir
+
+            -- atualiza cor do time
+            if player.Team and player.Team.TeamColor then
+                ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
+            else
+                ESPObjects[player].OutlineColor = Color3.new(1,1,1)
             end
         end
     end
 end)
 
--- RESPAWN / TEAM CHANGE
+-- RESPAWN / ENTRADA DE JOGADOR
 Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
+        task.wait(0.3) -- espera o personagem carregar
         if ESPEnabled then
-            task.wait(0.5)
             createESP(player)
         end
     end)
 end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    player.CharacterAdded:Connect(function()
+        task.wait(0.3)
+        if ESPEnabled then
+            createESP(player)
+        end
+    end)
+end
 
 -- BOTÃO ESP CLÁSSICO
 Tabs.Main:AddToggle("ESP_TOGGLE", {
@@ -235,6 +246,13 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
         if not ESPEnabled then
             for player, _ in pairs(ESPObjects) do
                 removeESP(player)
+            end
+        else
+            -- ativa ESP em todos que já estão no jogo
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer then
+                    createESP(player)
+                end
             end
         end
     end
