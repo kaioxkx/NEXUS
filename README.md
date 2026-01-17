@@ -370,6 +370,7 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -387,37 +388,39 @@ local function ResetCamera()
     end
 end
 
--- remove botões
-local function ClearPlayerButtons()
-    for _, btn in pairs(PlayerButtons) do
-        btn:Destroy()
+-- limpar botões
+local function ClearButtons()
+    for _, b in pairs(PlayerButtons) do
+        b:Destroy()
     end
     PlayerButtons = {}
 end
 
--- cria lista dinâmica
+-- mostrar jogador selecionado (1 segundo)
+local function ShowSelected(plr)
+    local txt = Tabs.tp:AddParagraph({
+        Title = "JOGADOR SELECIONADO",
+        Content = plr.DisplayName .. " (@" .. plr.Name .. ")"
+    })
+
+    task.delay(1, function()
+        txt:Destroy()
+    end)
+end
+
+-- atualizar lista
 local function RefreshPlayers()
-    ClearPlayerButtons()
+    ClearButtons()
 
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
-            local btn = tp:AddButton({
+            local btn = Tabs.tp:AddButton({
                 Title = plr.DisplayName,
                 Description = "(@" .. plr.Name .. ")",
                 Callback = function()
                     SelectedPlayer = plr
-                    ClearPlayerButtons()
-
-                    local info = tp:AddParagraph({
-                        Title = "JOGADOR SELECIONADO",
-                        Content = plr.DisplayName .. " (@" .. plr.Name .. ")"
-                    })
-
-                    task.delay(1, function()
-                        if info then
-                            info:Destroy()
-                        end
-                    end)
+                    ClearButtons()
+                    ShowSelected(plr)
                 end
             })
 
@@ -426,17 +429,17 @@ local function RefreshPlayers()
     end
 end
 
--- BOTÃO ESCOLHER JOGADOR
-tp:AddButton({
+-- BOTÃO ESCOLHER
+Tabs.tp:AddButton({
     Title = "ESCOLHER JOGADOR",
-    Description = "Mostrar jogadores do servidor",
+    Description = "Selecionar jogador do servidor",
     Callback = function()
         RefreshPlayers()
     end
 })
 
--- BOTÃO TP (dentro do jogador)
-tp:AddButton({
+-- BOTÃO TP (TP DENTRO DO PLAYER)
+Tabs.tp:AddButton({
     Title = "TP",
     Description = "Teleportar para o jogador selecionado",
     Callback = function()
@@ -453,7 +456,7 @@ tp:AddButton({
 })
 
 -- TOGGLE ESPECTAR
-tp:AddToggle("SPECTATE_PLAYER", {
+Tabs.tp:AddToggle("SPECTATE_TOGGLE", {
     Title = "ESPECTAR",
     Default = false,
     Callback = function(Value)
@@ -464,7 +467,7 @@ tp:AddToggle("SPECTATE_PLAYER", {
     end
 })
 
--- se player sair do jogo
+-- se jogador sair
 Players.PlayerRemoving:Connect(function(plr)
     if plr == SelectedPlayer then
         SelectedPlayer = nil
@@ -473,7 +476,7 @@ Players.PlayerRemoving:Connect(function(plr)
     end
 end)
 
--- câmera em tempo real
+-- espectar em tempo real
 RunService.Heartbeat:Connect(function()
     if SpectateEnabled and SelectedPlayer then
         if SelectedPlayer.Character then
