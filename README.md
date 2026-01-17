@@ -159,15 +159,80 @@ Tabs.Main:AddButton({
     end
 })
 
+local UIS = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local InfiniteJumpEnabled = false
+local NoClipEnabled = false
+
 -- =====================================
--- ESP
+-- INFINITEJUMP
+-- =====================================
+Tabs.Main:AddToggle("INFINITEJUMP_TOGGLE", {
+    Title = "INFINITEJUMP",
+    Default = false,
+    Callback = function(Value)
+        InfiniteJumpEnabled = Value
+    end
+})
+
+-- executa o InfiniteJump
+UIS.JumpRequest:Connect(function()
+    if InfiniteJumpEnabled then
+        local character = LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end
+end)
+
+-- =====================================
+-- NOCLIP
+-- =====================================
+Tabs.Main:AddToggle("NOCLIP_TOGGLE", {
+    Title = "NOCLIP",
+    Default = false,
+    Callback = function(Value)
+        NoClipEnabled = Value
+    end
+})
+
+-- loop do noclip
+RunService.Stepped:Connect(function()
+    if NoClipEnabled then
+        local character = LocalPlayer.Character
+        if character then
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        end
+    else
+        local character = LocalPlayer.Character
+        if character then
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end)
+-- =====================================
+-- esp
 -- =====================================
 
 -- SERVIÇOS
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
--- VARIÁVEIS
+local LocalPlayer = Players.LocalPlayer
 local ESPEnabled = false
 local ESPObjects = {}
 
@@ -184,11 +249,10 @@ local function applyESP(player)
     local highlight = Instance.new("Highlight")
     highlight.Name = "MilenioX_ESP"
     highlight.Adornee = character
-    highlight.DepthMode = Enum.HighlightDepthMode.Occluded  -- clássico
+    highlight.DepthMode = Enum.HighlightDepthMode.Occluded
     highlight.FillTransparency = 1
     highlight.OutlineTransparency = 0
 
-    -- cor do time
     if player.Team and player.Team.TeamColor then
         highlight.OutlineColor = player.Team.TeamColor.Color
     else
@@ -210,26 +274,31 @@ local function removeESP(player)
 end
 
 -- =====================================
--- ATUALIZA ESP QUANDO MUDAR DE TIME
+-- FUNÇÃO: APLICAR ESP EM TODOS OS JOGADORES
 -- =====================================
-Players.PlayerAdded:Connect(function(player)
-    player:GetPropertyChangedSignal("Team"):Connect(function()
-        if ESPEnabled and ESPObjects[player] then
-            if player.Team and player.Team.TeamColor then
-                ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
-            else
-                ESPObjects[player].OutlineColor = Color3.new(1,1,1)
-            end
+local function applyESPAll()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            applyESP(player)
         end
-    end)
-end)
+    end
+end
+
+-- =====================================
+-- FUNÇÃO: REMOVER ESP DE TODOS
+-- =====================================
+local function removeESPAll()
+    for player, _ in pairs(ESPObjects) do
+        removeESP(player)
+    end
+end
 
 -- =====================================
 -- RESPAWN: GARANTE ESP
 -- =====================================
 local function onCharacterAdded(player)
     player.CharacterAdded:Connect(function()
-        task.wait(0.3)  -- espera o character carregar
+        task.wait(0.3) -- espera o character carregar
         if ESPEnabled then
             applyESP(player)
         end
@@ -247,26 +316,36 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 -- =====================================
+-- LOOP PRINCIPAL: ATUALIZA ESP TODO MOMENTO
+-- =====================================
+RunService.Heartbeat:Connect(function()
+    if ESPEnabled then
+        for player, highlight in pairs(ESPObjects) do
+            if player.Team and player.Team.TeamColor then
+                highlight.OutlineColor = player.Team.TeamColor.Color
+            else
+                highlight.OutlineColor = Color3.new(1,1,1)
+            end
+        end
+
+        -- garante ESP em todo mundo
+        applyESPAll()
+    end
+end)
+
+-- =====================================
 -- BOTÃO ESP ON/OFF
 -- =====================================
 Tabs.Main:AddToggle("ESP_TOGGLE", {
-    Title = "ESP Clássico (Team Color)",
+    Title = "ESP",
     Default = false,
     Callback = function(Value)
         ESPEnabled = Value
 
-        if ESPEnabled then
-            -- aplica ESP para todos já presentes
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer then
-                    applyESP(player)
-                end
-            end
+        if not ESPEnabled then
+            removeESPAll() -- remove tudo instantaneamente
         else
-            -- remove todos
-            for player, _ in pairs(ESPObjects) do
-                removeESP(player)
-            end
+            applyESPAll() -- aplica todos ao ligar
         end
     end
 })
