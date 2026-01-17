@@ -159,39 +159,49 @@ Tabs.Main:AddButton({
     end
 })
 
-ESP 2026 KKKKKK
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+-- =====================================
+-- ESP
+-- =====================================
 
+-- SERVIÇOS
+local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+
+-- VARIÁVEIS
 local ESPEnabled = false
 local ESPObjects = {}
 
+-- =====================================
 -- FUNÇÃO: CRIAR ESP
-local function createESP(player)
+-- =====================================
+local function applyESP(player)
     if player == LocalPlayer then return end
-    if not player.Character then return end
-    if ESPObjects[player] and ESPObjects[player].Parent then return end
+    if ESPObjects[player] then return end
+
+    local character = player.Character
+    if not character then return end
 
     local highlight = Instance.new("Highlight")
     highlight.Name = "MilenioX_ESP"
-    highlight.Adornee = player.Character
-    highlight.DepthMode = Enum.HighlightDepthMode.Occluded
+    highlight.Adornee = character
+    highlight.DepthMode = Enum.HighlightDepthMode.Occluded  -- clássico
     highlight.FillTransparency = 1
     highlight.OutlineTransparency = 0
 
-    -- cor inicial
+    -- cor do time
     if player.Team and player.Team.TeamColor then
         highlight.OutlineColor = player.Team.TeamColor.Color
     else
         highlight.OutlineColor = Color3.new(1,1,1)
     end
 
-    highlight.Parent = workspace -- mantem no workspace pra não sumir
+    highlight.Parent = character
     ESPObjects[player] = highlight
 end
 
+-- =====================================
 -- FUNÇÃO: REMOVER ESP
+-- =====================================
 local function removeESP(player)
     if ESPObjects[player] then
         ESPObjects[player]:Destroy()
@@ -199,60 +209,63 @@ local function removeESP(player)
     end
 end
 
--- ATUALIZAÇÃO CONSTANTE (COR DO TIME + CRIAR ESP)
-RunService.Heartbeat:Connect(function()
-    if not ESPEnabled then return end
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            if player.Character then
-                createESP(player)
-                -- atualiza cor do time
-                if player.Team and player.Team.TeamColor then
-                    ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
-                else
-                    ESPObjects[player].OutlineColor = Color3.new(1,1,1)
-                end
+-- =====================================
+-- ATUALIZA ESP QUANDO MUDAR DE TIME
+-- =====================================
+Players.PlayerAdded:Connect(function(player)
+    player:GetPropertyChangedSignal("Team"):Connect(function()
+        if ESPEnabled and ESPObjects[player] then
+            if player.Team and player.Team.TeamColor then
+                ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
+            else
+                ESPObjects[player].OutlineColor = Color3.new(1,1,1)
             end
         end
-    end
+    end)
 end)
 
--- GARANTE ESP EM NOVOS JOGADORES / RESPAWN
-local function connectCharacter(player)
+-- =====================================
+-- RESPAWN: GARANTE ESP
+-- =====================================
+local function onCharacterAdded(player)
     player.CharacterAdded:Connect(function()
-        task.wait(0.3)
+        task.wait(0.3)  -- espera o character carregar
         if ESPEnabled then
-            createESP(player)
+            applyESP(player)
         end
     end)
 end
 
+-- conecta para todos já no jogo
 for _, player in ipairs(Players:GetPlayers()) do
-    connectCharacter(player)
+    onCharacterAdded(player)
 end
 
+-- conecta jogadores que entrarem depois
 Players.PlayerAdded:Connect(function(player)
-    connectCharacter(player)
+    onCharacterAdded(player)
 end)
 
--- BOTÃO ESP
+-- =====================================
+-- BOTÃO ESP ON/OFF
+-- =====================================
 Tabs.Main:AddToggle("ESP_TOGGLE", {
-    Title = "ESP",
+    Title = "ESP Clássico (Team Color)",
     Default = false,
     Callback = function(Value)
         ESPEnabled = Value
 
-        if not ESPEnabled then
-            for player, _ in pairs(ESPObjects) do
-                removeESP(player)
-            end
-        else
-            -- aplica ESP em todos existentes
+        if ESPEnabled then
+            -- aplica ESP para todos já presentes
             for _, player in ipairs(Players:GetPlayers()) do
                 if player ~= LocalPlayer then
-                    createESP(player)
+                    applyESP(player)
                 end
+            end
+        else
+            -- remove todos
+            for player, _ in pairs(ESPObjects) do
+                removeESP(player)
             end
         end
     end
