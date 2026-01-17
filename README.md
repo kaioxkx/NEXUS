@@ -242,7 +242,7 @@ Tabs.Main:AddToggle("NOCLIP", {
 })
 
 -- =====================================
--- ESP CLÁSSICO PREMIUM (AlwaysOnTop)
+-- ESP
 -- =====================================
 
 -- SERVIÇOS
@@ -321,17 +321,8 @@ end
 -- =====================================
 local function onCharacter(player)
     player.CharacterAdded:Connect(function(character)
-        -- Espera a character ser totalmente carregado
-        local function waitForCharacter()
-            while not character:IsDescendantOf(workspace) do
-                task.wait()
-            end
-            task.wait(0.2) -- Espera um pouco para garantir que tudo esteja configurado
-            if ESPEnabled then
-                setupESP(player)
-            end
-        end
-        waitForCharacter()  -- Chama a função para esperar pelo character
+        task.wait(0.2) -- Aguarda um curto período para garantir que o personagem está completamente carregado
+        setupESP(player) -- Aplica o ESP ao novo personagem
     end)
 
     -- Aplicar ESP ao personagem atual se já estiver no jogo
@@ -381,6 +372,7 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
         end
     end
 })
+
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Inf)
