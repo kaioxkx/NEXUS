@@ -44,7 +44,7 @@ Tabs.Inf:AddButton({
             Title = "NEXUS",
             Content = "DISCORD",
             SubContent = "LINK DO DISCORD COPIADO✅",
-            Duration = 5
+            Duration = 3
         })
     end
 })
@@ -159,7 +159,7 @@ Tabs.Main:AddButton({
     end
 })
 
--- SERVIÇOS
+-- esp
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -167,7 +167,7 @@ local LocalPlayer = Players.LocalPlayer
 local ESPEnabled = false
 local ESPObjects = {}
 
--- FUNÇÃO: CRIAR ESP
+-- CRIAR ESP CLÁSSICO
 local function createESP(player)
     if player == LocalPlayer then return end
     if not player.Character then return end
@@ -176,23 +176,16 @@ local function createESP(player)
     local highlight = Instance.new("Highlight")
     highlight.Name = "MilenioX_ESP"
     highlight.Adornee = player.Character
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.DepthMode = Enum.HighlightDepthMode.Occluded -- clássico
     highlight.FillTransparency = 1
     highlight.OutlineTransparency = 0
-
-    -- cor do time
-    local color = Color3.new(1,1,1)
-    if player.Team and player.Team.TeamColor then
-        color = player.Team.TeamColor.Color
-    end
-
-    highlight.OutlineColor = color
+    highlight.OutlineColor = Color3.new(1,1,1) -- cor padrão, vai atualizar depois
     highlight.Parent = player.Character
 
     ESPObjects[player] = highlight
 end
 
--- FUNÇÃO: REMOVER ESP
+-- REMOVER ESP
 local function removeESP(player)
     if ESPObjects[player] then
         ESPObjects[player]:Destroy()
@@ -200,7 +193,7 @@ local function removeESP(player)
     end
 end
 
--- ATUALIZA CONSTANTE
+-- ATUALIZA TODO MOMENTO
 RunService.Heartbeat:Connect(function()
     if not ESPEnabled then return end
 
@@ -210,9 +203,11 @@ RunService.Heartbeat:Connect(function()
                 if not ESPObjects[player] then
                     createESP(player)
                 else
-                    -- atualiza cor se trocar de time
+                    -- atualizar cor do time
                     if player.Team and player.Team.TeamColor then
                         ESPObjects[player].OutlineColor = player.Team.TeamColor.Color
+                    else
+                        ESPObjects[player].OutlineColor = Color3.new(1,1,1)
                     end
                 end
             end
@@ -230,7 +225,7 @@ Players.PlayerAdded:Connect(function(player)
     end)
 end)
 
--- BOTÃO ESP
+-- BOTÃO ESP CLÁSSICO
 Tabs.Main:AddToggle("ESP_TOGGLE", {
     Title = "ESP (Team Color)",
     Default = false,
@@ -242,13 +237,6 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
                 removeESP(player)
             end
         end
-
-        Fluent:Notify({
-            Title = "MILENIO X",
-            Content = "ESP",
-            SubContent = ESPEnabled and "ESP ATIVADO" or "ESP DESATIVADO",
-            Duration = 4
-        })
     end
 })
 Options.MyToggle:SetValue(false)
