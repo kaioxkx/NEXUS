@@ -487,6 +487,110 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+
+-- =====================================
+-- puxar informações 
+-- =====================================
+
+
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+
+-- TÍTULO
+Tabs.tp:AddParagraph({
+    Title = "PUXADOR DE INFORMAÇÕES",
+    Content = "Consulta de contas do Roblox"
+})
+
+-- função pra remover textos depois
+local function AutoDestroy(obj, time)
+    task.delay(time, function()
+        if obj and obj.Destroy then
+            obj:Destroy()
+        end
+    end)
+end
+
+-- INPUT USUÁRIO
+Tabs.tp:AddInput("USER_LOOKUP", {
+    Title = "USUÁRIO:",
+    Default = "",
+    Placeholder = "Digite o nome do usuário",
+    Numeric = false,
+    Finished = true,
+
+    Callback = function(username)
+        if username == "" then return end
+
+        local userId
+
+        -- tentar pegar ID pelo nome
+        local success = pcall(function()
+            userId = Players:GetUserIdFromNameAsync(username)
+        end)
+
+        -- se não existir
+        if not success or not userId then
+            Fluent:Notify({
+                Title = "ERRO",
+                Content = "USUÁRIO NÃO ENCONTRADO",
+                Duration = 3
+            })
+            return
+        end
+
+        -- puxar infos da conta
+        local info
+        pcall(function()
+            info = Players:GetUserInfosByUserIdsAsync({userId})[1]
+        end)
+
+        if not info then return end
+
+        -- status
+        local status = "Offline"
+        if info.IsOnline then
+            status = "Online"
+        end
+
+        -- data da conta
+        local created = os.date("%d/%m/%Y", info.Created.UnixTimestamp)
+
+        -- textos
+        local t1 = Tabs.tp:AddParagraph({
+            Title = "USUÁRIO:",
+            Content = info.Username
+        })
+
+        local t2 = Tabs.tp:AddParagraph({
+            Title = "ID:",
+            Content = tostring(userId)
+        })
+
+        local t3 = Tabs.tp:AddParagraph({
+            Title = "DATA DE CONTA:",
+            Content = created
+        })
+
+        local t4 = Tabs.tp:AddParagraph({
+            Title = "IDADE DA CONTA:",
+            Content = tostring(info.AccountAge) .. " dias"
+        })
+
+        local t5 = Tabs.tp:AddParagraph({
+            Title = "STATUS:",
+            Content = status
+        })
+
+        -- remover depois de 60 segundos
+        AutoDestroy(t1, 60)
+        AutoDestroy(t2, 60)
+        AutoDestroy(t3, 60)
+        AutoDestroy(t4, 60)
+        AutoDestroy(t5, 60)
+    end
+})
+
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Inf)
