@@ -364,60 +364,60 @@ Tabs.Main:AddToggle("ESP_TOGGLE", {
 })
 
 -- =====================================
--- NOCLIP
+-- ESPIONAGEM 
 -- =====================================
 
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 local SelectedPlayer = nil
 local SpectateEnabled = false
-
 local PlayerButtons = {}
-local SelectButton = nil
 
 -- reset câmera
 local function ResetCamera()
-    local char = LocalPlayer.Character
-    if char then
-        local hum = char:FindFirstChildOfClass("Humanoid")
+    if LocalPlayer.Character then
+        local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then
             Camera.CameraSubject = hum
         end
     end
 end
 
--- limpa botões
+-- remove botões
 local function ClearPlayerButtons()
-    for _, b in pairs(PlayerButtons) do
-        b:Destroy()
+    for _, btn in pairs(PlayerButtons) do
+        btn:Destroy()
     end
     PlayerButtons = {}
 end
 
--- cria lista jogadores
+-- cria lista dinâmica
 local function RefreshPlayers()
     ClearPlayerButtons()
 
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
-            local btn = Tabs.tp:AddButton({
+            local btn = tp:AddButton({
                 Title = plr.DisplayName,
                 Description = "(@" .. plr.Name .. ")",
                 Callback = function()
                     SelectedPlayer = plr
+                    ClearPlayerButtons()
 
-                    -- muda nome do botão principal
-                    SelectButton:Set({
-                        Title = "JOGADOR: " .. plr.DisplayName,
-                        Description = "(@" .. plr.Name .. ")"
+                    local info = tp:AddParagraph({
+                        Title = "JOGADOR SELECIONADO",
+                        Content = plr.DisplayName .. " (@" .. plr.Name .. ")"
                     })
 
-                    ClearPlayerButtons()
+                    task.delay(1, function()
+                        if info then
+                            info:Destroy()
+                        end
+                    end)
                 end
             })
 
@@ -426,45 +426,54 @@ local function RefreshPlayers()
     end
 end
 
--- BOTÃO SELECIONAR
-SelectButton = Tabs.tp:AddButton({
-    Title = "SELECIONAR JOGADOR",
-    Description = "Clique para escolher",
+-- BOTÃO ESCOLHER JOGADOR
+tp:AddButton({
+    Title = "ESCOLHER JOGADOR",
+    Description = "Mostrar jogadores do servidor",
     Callback = function()
         RefreshPlayers()
     end
 })
 
--- BOTÃO TP
-Tabs.tp:AddButton({
+-- BOTÃO TP (dentro do jogador)
+tp:AddButton({
     Title = "TP",
-    Description = "Teleportar até o jogador",
+    Description = "Teleportar para o jogador selecionado",
     Callback = function()
         if SelectedPlayer
         and SelectedPlayer.Character
-        and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart")
+        and LocalPlayer.Character then
 
             LocalPlayer.Character:PivotTo(
-                SelectedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+                SelectedPlayer.Character.HumanoidRootPart.CFrame
             )
         end
     end
 })
 
 -- TOGGLE ESPECTAR
-Tabs.tp:AddToggle("SPECTATE", {
+tp:AddToggle("SPECTATE_PLAYER", {
     Title = "ESPECTAR",
     Default = false,
     Callback = function(Value)
         SpectateEnabled = Value
-
         if not Value then
             ResetCamera()
         end
     end
 })
 
--- mantém câmera sempre
+-- se player sair do jogo
+Players.PlayerRemoving:Connect(function(plr)
+    if plr == SelectedPlayer then
+        SelectedPlayer = nil
+        SpectateEnabled = false
+        ResetCamera()
+    end
+end)
+
+-- câmera em tempo real
 RunService.Heartbeat:Connect(function()
     if SpectateEnabled and SelectedPlayer then
         if SelectedPlayer.Character then
@@ -475,21 +484,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-
--- se jogador sair
-Players.PlayerRemoving:Connect(function(plr)
-    if plr == SelectedPlayer then
-        SelectedPlayer = nil
-        SpectateEnabled = false
-        ResetCamera()
-
-        SelectButton:Set({
-            Title = "SELECIONAR JOGADOR",
-            Description = "Clique para escolher"
-        })
-    end
-end)
-
 Options.MyToggle:SetValue(false)
 
 Window:SelectTab(Inf)
